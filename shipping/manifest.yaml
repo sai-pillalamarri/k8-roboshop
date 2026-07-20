@@ -1,0 +1,86 @@
+# service
+apiVersion: v1
+kind: Service
+metadata:
+  name: shipping
+  namespace: roboshop
+  labels:
+    project: roboshop
+    tier: backend
+    component: shipping
+spec:
+  selector:
+    project: roboshop
+    tier: backend
+    component: shipping
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
+
+---
+# configmap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: shipping-config
+  namespace: roboshop
+  labels:
+    project: roboshop
+    tier: backend
+    component: shipping
+data:
+  CART_ENDPOINT: "cart:8080"
+  DB_HOST: "mysql"
+
+---
+# deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: shipping
+  namespace: roboshop
+  labels:
+    project: roboshop
+    tier: backend
+    component: shipping
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      project: roboshop
+      tier: backend
+      component: shipping
+  # pod
+  template:
+    metadata:
+      labels:
+        project: roboshop
+        tier: backend
+        component: shipping
+    spec:
+      containers:
+        - name: shipping
+          image: saipillalamarri/shipping:v1
+          ports:
+            - name: liveness-port
+              containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: shipping-config
+          startupProbe:
+            httpGet:
+              path: /health
+              port: liveness-port
+            failureThreshold: 12
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: liveness-port
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: liveness-port
+            periodSeconds: 10

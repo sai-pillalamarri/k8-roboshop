@@ -1,0 +1,53 @@
+# service
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql
+  namespace: roboshop
+  labels:
+    project: roboshop
+    tier: db
+    component: mysql
+spec:
+  selector:
+    project: roboshop
+    tier: db
+    component: mysql
+  ports:
+    - protocol: TCP
+      port: 3306
+      targetPort: 3306
+
+---
+# deployement
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mysql
+  namespace: roboshop
+  labels:
+    project: roboshop
+    tier: db
+    component: mysql
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      project: roboshop
+      tier: db
+      component: mysql
+  # pod
+  template:
+    metadata:
+      labels:
+        project: roboshop
+        tier: db
+        component: mysql
+    spec:
+      containers:
+        - name: mysql
+          image: saipillalamarri/mysql:v1
+          env:
+            - name: "MYSQL_ROOT_PASSWORD"
+              value: "RoboShop@1"

@@ -1,0 +1,72 @@
+# service
+apiVersion: v1
+kind: Service
+metadata:
+  name: payment
+  namespace: roboshop
+  labels:
+    project: roboshop
+    tier: backend
+    component: payment
+spec:
+  selector:
+    project: roboshop
+    tier: backend
+    component: payment
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
+
+---
+# config map
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: payment-config
+  namespace: roboshop
+  labels:
+    project: roboshop
+    tier: backend
+    component: payment
+data:
+  CART_HOST: "cart"
+  CART_PORT: "8080"
+  USER_HOST: "user"
+  USER_PORT: "8080"
+  AMQP_HOST: "rabbitmq"
+  AMQP_USER: "roboshop"
+  AMQP_PASS: "roboshop123"
+
+---
+# deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: payment
+  namespace: roboshop
+  labels:
+    project: roboshop
+    tier: backend
+    component: payment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      project: roboshop
+      tier: backend
+      component: payment
+  # pod
+  template:
+    metadata:
+      labels:
+        project: roboshop
+        tier: backend
+        component: payment
+    spec:
+      containers:
+        - name: payment
+          image: saipillalamarri/payment:v1
+          envFrom:
+            - configMapRef:
+                name: payment-config
